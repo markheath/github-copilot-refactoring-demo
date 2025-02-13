@@ -27,6 +27,8 @@ public class Event
 {
     public int Id { get; set; }
     public required string Name { get; set; }
+    public required string Description { get; set; }
+    public Decimal TicketPrice { get; set; }
     public required string Artist { get; set; }
     public DateTime Date { get; set; }
     public required string Venue { get; set; }

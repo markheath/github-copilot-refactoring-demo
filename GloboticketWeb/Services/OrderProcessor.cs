@@ -1,4 +1,5 @@
 using GloboticketWeb.Models;
+namespace GloboticketWeb.Services;
 
 public interface IDiscountService
 {
@@ -6,11 +7,7 @@ public interface IDiscountService
     decimal ApplyDiscount(decimal price, string discountCode);
 }
 
-public interface IEventService
-{
-    bool AreSeatsAvailable(int eventId, int numberOfSeats);
-    Event GetEvent(int eventId);
-}
+
 
 public class OrderProcessor
 {

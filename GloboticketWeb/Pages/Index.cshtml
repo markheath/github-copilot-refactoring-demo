@@ -1,0 +1,34 @@
+@page
+@model GloboticketWeb.Pages.IndexModel
+@{
+    ViewData["Title"] = "Home";
+}
+
+<h1>Available Events</h1>
+
+<form method="post" asp-page-handler="AddToBasket">
+    <div class="row">
+        @foreach (var evt in Model.Events)
+        {
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">@evt.Name</h5>
+                        <p class="card-text">@evt.Description</p>
+                        <p>Date: @evt.Date.ToShortDateString()</p>
+                        <p>Price: @evt.TicketPrice.ToString("C")</p>
+                        <div class="form-group">
+                            <label>Quantity:</label>
+                            <input type="number" 
+                                   class="form-control" 
+                                   min="0" 
+                                   max="10" 
+                                   asp-for="TicketQuantities[evt.Id]" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+    <button type="submit" class="btn btn-primary">Add to Basket</button>
+</form>

@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GloboticketWeb.DataAccess.Migrations
 {
     [DbContext(typeof(GloboticketDbContext))]
-    [Migration("20250213161828_InitialCreate")]
+    [Migration("20250213171658_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -55,12 +55,19 @@ namespace GloboticketWeb.DataAccess.Migrations
                     b.Property<DateTime>("Date")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("ImageUrl")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("TicketPrice")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Venue")
