@@ -8,8 +8,8 @@ public interface IDiscountService
 
 public interface IEventService
 {
-    bool AreSeatsAvailable(string eventId, int numberOfSeats);
-    Event GetEvent(string eventId);
+    bool AreSeatsAvailable(int eventId, int numberOfSeats);
+    Event GetEvent(int eventId);
 }
 
 public class OrderProcessor
@@ -70,7 +70,7 @@ public class OrderProcessor
             return false;
         }
 
-        if (order.PaymentInfo == null || string.IsNullOrEmpty(order.PaymentInfo.PaymentMethod) || string.IsNullOrEmpty(order.PaymentInfo.PaymentReference))
+        if (order.PaymentInfo == null || string.IsNullOrEmpty(order.PaymentInfo.PaymentMethod) || string.IsNullOrEmpty(order.PaymentInfo.CreditCardName))
         {
             return false;
         }
@@ -82,7 +82,7 @@ public class OrderProcessor
 
         foreach (var ticket in order.Tickets)
         {
-            if (ticket.Event == null || string.IsNullOrEmpty(ticket.Event.Id))
+            if (ticket.Event == null)
             {
                 return false;
             }
