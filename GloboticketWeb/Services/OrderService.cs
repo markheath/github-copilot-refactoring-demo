@@ -1,20 +1,12 @@
 using GloboticketWeb.Models;
 namespace GloboticketWeb.Services;
 
-public interface IDiscountService
-{
-    bool IsValidDiscountCode(string discountCode);
-    decimal ApplyDiscount(decimal price, string discountCode);
-}
-
-
-
-public class OrderProcessor
+public class OrderService : IOrderService
 {
     private readonly IDiscountService _discountService;
     private readonly IEventService _eventService;
 
-    public OrderProcessor(IDiscountService discountService, IEventService eventService)
+    public OrderService(IDiscountService discountService, IEventService eventService)
     {
         _discountService = discountService;
         _eventService = eventService;
