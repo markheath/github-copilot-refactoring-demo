@@ -7,7 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 builder.Services.AddDbContext<GloboticketDbContext>();
 //builder.Services.AddDbContext<GloboticketDbContext>(options =>
-    //options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+//    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddSession();
 builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddScoped<IBasketService, BasketService>();
