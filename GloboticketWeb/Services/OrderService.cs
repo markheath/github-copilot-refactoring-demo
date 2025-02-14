@@ -5,11 +5,18 @@ public class OrderService : IOrderService
 {
     private readonly IDiscountService _discountService;
     private readonly IEventService _eventService;
+    private readonly GloboticketDbContext dbContext;
+    private readonly IPaymentProcessor paymentProcessor;
 
-    public OrderService(IDiscountService discountService, IEventService eventService)
+    public OrderService(IDiscountService discountService, 
+        IEventService eventService,
+        IPaymentProcessor paymentProcessor,
+        GloboticketDbContext dbContext)
     {
         _discountService = discountService;
         _eventService = eventService;
+        this.dbContext = dbContext;
+        this.paymentProcessor = paymentProcessor;
     }
 
     public async Task<bool> ProcessOrder(Order order)
@@ -22,7 +29,16 @@ public class OrderService : IOrderService
         decimal total = 0;
         foreach (var ticket in order.Tickets)
         {
-            total += ticket.Price;
+            if (ticket.NumberOfSeats < 0)
+            {
+                return false;
+            }
+            if (ticket.NumberOfSeats > 10)
+            {
+                // Limit of 10 tickets per order
+                return false;
+            }
+            total += ticket.NumberOfSeats * ticket.Price;
         }
 
         if (!string.IsNullOrEmpty(order.DiscountCode) && _discountService.IsValidDiscountCode(order.DiscountCode))
@@ -30,19 +46,24 @@ public class OrderService : IOrderService
             total = _discountService.ApplyDiscount(total, order.DiscountCode);
         }
 
-        if (order.Tickets.Count > 10)
-        {
-            // Apply bulk discount
-            total *= 0.9m;
-        }
-
         order.TotalPrice = total;
+        order.Status = OrderStatus.Confirmed;
+        
+        // payment processing
+        await paymentProcessor.ProcessPayment(order.TotalPrice, order.PaymentInfo);
 
-        // Simulate payment processing
-        await Task.Delay(1000);
+        order.Status = OrderStatus.Paid;
 
-        // Simulate saving to database
-        await Task.Delay(1000);
+        // save to database
+        dbContext.Add(order);
+        await dbContext.SaveChangesAsync();
+
+        // send confirmation email
+        var emailService = new EmailService();
+        await emailService.SendEmailAsync(order.CustomerDetails.Email, 
+            "Order Confirmation", 
+            $"Thank you for your order {order.Id}. " +
+            $"Your order total is {order.TotalPrice}");
 
         return true;
     }
@@ -87,7 +108,7 @@ public class OrderService : IOrderService
                 return false;
             }
 
-            if (!_eventService.AreSeatsAvailable(ticket.Event.Id, 1))
+            if (!_eventService.AreSeatsAvailable(ticket.Event.Id, ticket.NumberOfSeats))
             {
                 return false;
             }
