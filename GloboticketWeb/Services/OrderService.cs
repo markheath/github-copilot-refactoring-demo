@@ -3,20 +3,20 @@ namespace GloboticketWeb.Services;
 
 public class OrderService : IOrderService
 {
-    private readonly IDiscountService _discountService;
-    private readonly IEventService _eventService;
-    private readonly GloboticketDbContext dbContext;
+    private readonly IDiscountService discountService;
+    private readonly IEventService eventService;
+    private readonly GloboticketDbContext globoticketDbContext;
     private readonly IPaymentProcessor paymentProcessor;
 
     public OrderService(IDiscountService discountService, 
         IEventService eventService,
         IPaymentProcessor paymentProcessor,
-        GloboticketDbContext dbContext)
+        GloboticketDbContext globoticketDbContext)
     {
-        _discountService = discountService;
-        _eventService = eventService;
-        this.dbContext = dbContext;
+        this.discountService = discountService;
+        this.eventService = eventService;
         this.paymentProcessor = paymentProcessor;
+        this.globoticketDbContext = globoticketDbContext;
     }
 
     public async Task<bool> ProcessOrder(Order order)
@@ -41,9 +41,9 @@ public class OrderService : IOrderService
             total += ticket.NumberOfSeats * ticket.Price;
         }
 
-        if (!string.IsNullOrEmpty(order.DiscountCode) && _discountService.IsValidDiscountCode(order.DiscountCode))
+        if (!string.IsNullOrEmpty(order.DiscountCode) && discountService.IsValidDiscountCode(order.DiscountCode))
         {
-            total = _discountService.ApplyDiscount(total, order.DiscountCode);
+            total = discountService.ApplyDiscount(total, order.DiscountCode);
         }
 
         order.TotalPrice = total;
@@ -55,8 +55,8 @@ public class OrderService : IOrderService
         order.Status = OrderStatus.Paid;
 
         // save to database
-        dbContext.Add(order);
-        await dbContext.SaveChangesAsync();
+        globoticketDbContext.Add(order);
+        await globoticketDbContext.SaveChangesAsync();
 
         // send confirmation email
         var emailService = new EmailService();
@@ -97,7 +97,7 @@ public class OrderService : IOrderService
                 return false;
             }
 
-            var eventDetails = _eventService.GetEvent(ticket.Event.Id);
+            var eventDetails = eventService.GetEvent(ticket.Event.Id);
             if (eventDetails == null)
             {
                 return false;
@@ -108,7 +108,7 @@ public class OrderService : IOrderService
                 return false;
             }
 
-            if (!_eventService.AreSeatsAvailable(ticket.Event.Id, ticket.NumberOfSeats))
+            if (!eventService.AreSeatsAvailable(ticket.Event.Id, ticket.NumberOfSeats))
             {
                 return false;
             }
