@@ -7,16 +7,20 @@ public class OrderService : IOrderService
     private readonly IEventService eventService;
     private readonly GloboticketDbContext globoticketDbContext;
     private readonly IPaymentProcessor paymentProcessor;
+    private readonly IEmailService emailService;
 
-    public OrderService(IDiscountService discountService, 
+    public OrderService(
+        IDiscountService discountService, 
         IEventService eventService,
         IPaymentProcessor paymentProcessor,
-        GloboticketDbContext globoticketDbContext)
+        GloboticketDbContext globoticketDbContext,
+        IEmailService emailService)
     {
         this.discountService = discountService;
         this.eventService = eventService;
         this.paymentProcessor = paymentProcessor;
         this.globoticketDbContext = globoticketDbContext;
+        this.emailService = emailService;
     }
 
     public async Task<bool> ProcessOrder(Order order)
@@ -59,7 +63,6 @@ public class OrderService : IOrderService
         await globoticketDbContext.SaveChangesAsync();
 
         // send confirmation email
-        var emailService = new EmailService();
         await emailService.SendEmailAsync(order.CustomerDetails.Email, 
             "Order Confirmation", 
             $"Thank you for your order {order.Id}. " +
