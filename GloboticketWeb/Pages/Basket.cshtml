@@ -1,0 +1,63 @@
+@page
+@model GloboticketWeb.Pages.BasketModel
+@{
+    ViewData["Title"] = "Shopping Basket";
+}
+
+<h1>Your Shopping Basket</h1>
+
+@if (!Model.BasketItems.Any())
+{
+    <p>Your basket is empty</p>
+}
+else
+{
+    <form method="post">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Event</th>
+                    <th>Date</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Subtotal</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (int i = 0; i < Model.BasketItems.Count; i++)
+                {
+                    var item = Model.BasketItems[i];
+                    <tr>
+                        <td>@item.Event.Name</td>
+                        <td>@item.Event.Date.ToShortDateString()</td>
+                        <td>@item.Event.TicketPrice.ToString("C")</td>
+                        <td>
+                            <input type="number" asp-for="BasketItems[i].NumberOfSeats" 
+                                   class="form-control" min="1" max="10" style="width: 80px"
+                                   onchange="this.form.submit()" />
+                        </td>
+                        <td>@((item.Event.TicketPrice * item.NumberOfSeats).ToString("C"))</td>
+                        <td>
+                            <button type="submit" asp-page-handler="Remove" 
+                                    asp-route-ticketId="@item.Id" 
+                                    class="btn btn-danger btn-sm">Remove</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="4" class="text-end"><strong>Total:</strong></td>
+                    <td><strong>@Model.BasketTotal.ToString("C")</strong></td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+        <div class="d-flex justify-content-between">
+            <a href="/" class="btn btn-secondary">Continue Shopping</a>
+            <button type="submit" asp-page-handler="Checkout" 
+                    class="btn btn-primary">Proceed to Checkout</button>
+        </div>
+    </form>
+}
