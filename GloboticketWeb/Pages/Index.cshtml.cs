@@ -10,7 +10,7 @@ public class IndexModel : PageModel
     private readonly IEventService _eventService;
     private readonly IBasketService _basketService;
 
-    public List<Event> Events { get; set; }
+    public List<Event> Events { get; set; } = new();
     [BindProperty]
     public Dictionary<int, int> TicketQuantities { get; set; } = new();
 
@@ -23,6 +23,7 @@ public class IndexModel : PageModel
     public async Task OnGetAsync()
     {
         Events = await _eventService.GetTopEventsAsync();
+        TicketQuantities = Events.ToDictionary(e => e.Id, e => 0);
     }
 
     public async Task<IActionResult> OnPostAddToBasketAsync()

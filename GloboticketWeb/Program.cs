@@ -32,4 +32,6 @@ app.UseAuthorization();
 
 app.MapRazorPages();
 
+await EventDataSeeder.SeedEvents(app.Services);
+
 app.Run();
