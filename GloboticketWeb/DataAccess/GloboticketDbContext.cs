@@ -5,6 +5,7 @@ public class GloboticketDbContext : DbContext
 {
     public DbSet<Event> Events { get; set; }
     public DbSet<Order> Orders { get; set; }
+    public DbSet<Customer> Customers { get; set; }
 
     public string DbPath { get; }
 

@@ -1,0 +1,56 @@
+using GloboticketWeb.Models;
+using Microsoft.EntityFrameworkCore;
+namespace GloboticketWeb.Services;
+
+public class CustomerService
+{
+    private readonly GloboticketDbContext _context;
+
+    public CustomerService(GloboticketDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<Customer> GetCustomerAsync(string email)
+    {
+        return await _context.Customers.Where(c => c.Email == email).FirstOrDefaultAsync();
+    }
+
+    public async Task<Customer> CreateCustomerAsync(string email, string firstName, string lastName)
+    {
+        var customer = new Customer
+        {
+            Email = email,
+            FirstName = firstName,
+            LastName = lastName,
+        };
+
+        _context.Customers.Add(customer);
+        await _context.SaveChangesAsync();
+
+        return customer;
+    }
+
+    // get customer orders
+    public async Task<List<Order>> GetCustomerOrdersAsync(string email)
+    {
+        return await _context.Orders
+            .Include(o => o.Tickets)
+            .Where(o => o.CustomerDetails.Email == email)
+            .ToListAsync();
+    }
+
+    public static decimal CalculateOrderTotal(List<Order> orders)
+    {
+        var total = 0m;
+        foreach (var order in orders)
+        {
+            if (order.Status != OrderStatus.Paid)
+            {
+                continue;
+            }
+            total += order.TotalPrice;
+        }
+        return total;
+    }
+}
