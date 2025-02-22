@@ -1,0 +1,183 @@
+@page
+@{
+    ViewData["Title"] = "Select Your Seats";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-9">
+            <div class="theatre">
+                <div class="screen">Stage</div>
+                <div id="seating-plan"></div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="selection-summary">
+                <h3>Selected Seats</h3>
+                <ul id="selected-seats"></ul>
+                <div class="seat-count">
+                    Selected: <span id="seat-count">0</span>/6
+                </div>
+                <button class="btn btn-primary mt-3" id="confirm-selection" disabled>
+                    Confirm Selection
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .theatre {
+        background: #f4f4f4;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+    }
+
+    .seat-row {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0 auto;
+        white-space: nowrap;
+    }
+
+    .screen {
+        background: #fff;
+        height: 70px;
+        width: 80%;
+        margin: 15px auto;
+        text-align: center;
+        line-height: 70px;
+        border-radius: 5px;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    }
+
+    .seat {
+        width: 30px;
+        height: 30px;
+        margin: 3px;
+        display: inline-block;
+        background: #ffffff;
+        border: 1px solid #2c3e50;
+        border-radius: 5px;
+        cursor: pointer;
+        text-align: center;
+        line-height: 26px;
+        font-size: 12px;
+        color: #2c3e50;
+    }
+
+    .seat.taken {
+        background: #e63946;
+        border-color: #e63946;
+        color: white;
+        cursor: not-allowed;
+    }
+
+    .seat.selected {
+        background: #457b9d;
+        border-color: #457b9d;
+        color: white;
+    }
+
+    .row-label {
+        width: 30px;
+        display: inline-block;
+        text-align: center;
+        margin-right: 10px;
+    }
+
+    .selection-summary {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+    }
+
+    #selected-seats {
+        list-style: none;
+        padding: 0;
+    }
+
+    #selected-seats li {
+        margin: 5px 0;
+        padding: 5px;
+        background: #e9ecef;
+        border-radius: 3px;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            const rows = 8;
+            const seatsPerRow = 12;
+            const maxSelections = 6;
+            let selectedSeats = [];
+
+            function initializeSeating() {
+                const seatingPlan = $('#seating-plan');
+                
+                for (let row = 0; row < rows; row++) {
+                    const rowContainer = $('<div class="seat-row"></div>');
+                    rowContainer.append(`<span class="row-label">${String.fromCharCode(65 + row)}</span>`);
+                    
+                    for (let seat = 0; seat < seatsPerRow; seat++) {
+                        const seatNumber = `${String.fromCharCode(65 + row)}${seat + 1}`;
+                        const isTaken = Math.random() < 0.3; // 30% chance seat is taken
+                        const seatElement = $(`<div class="seat ${isTaken ? 'taken' : ''}" 
+                            data-seat="${seatNumber}">${seatNumber}</div>`);
+                        
+                        if (!isTaken) {
+                            seatElement.click(function() {
+                                toggleSeat($(this));
+                            });
+                        }
+                        
+                        rowContainer.append(seatElement);
+                    }
+                    seatingPlan.append(rowContainer);
+                }
+            }
+
+            function toggleSeat(seat) {
+                const seatNumber = seat.data('seat');
+                
+                if (seat.hasClass('selected')) {
+                    seat.removeClass('selected');
+                    selectedSeats = selectedSeats.filter(s => s !== seatNumber);
+                } else {
+                    if (selectedSeats.length >= maxSelections) {
+                        alert(`You can only select up to ${maxSelections} seats.`);
+                        return;
+                    }
+                    seat.addClass('selected');
+                    selectedSeats.push(seatNumber);
+                }
+                
+                updateSelectionSummary();
+            }
+
+            function updateSelectionSummary() {
+                const selectedList = $('#selected-seats');
+                selectedList.empty();
+                
+                selectedSeats.forEach(seat => {
+                    selectedList.append(`<li>Seat ${seat}</li>`);
+                });
+                
+                $('#seat-count').text(selectedSeats.length);
+                $('#confirm-selection').prop('disabled', selectedSeats.length === 0);
+            }
+
+            initializeSeating();
+
+            $('#confirm-selection').click(function() {
+                if (selectedSeats.length > 0) {
+                    alert('Selected seats: ' + selectedSeats.join(', '));
+                    // Here you would typically submit the selection to the server
+                }
+            });
+        });
+    </script>
+}
