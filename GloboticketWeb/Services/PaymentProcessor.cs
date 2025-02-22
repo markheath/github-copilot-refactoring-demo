@@ -1,11 +1,21 @@
-using System.Net;
+using System.Net.Http;
+using System.Text;
+using System.Text.Json;
 using GloboticketWeb.Models;
+
 namespace GloboticketWeb.Services;
 
 public class PaymentProcessor : IPaymentProcessor
 {
     private const string paymentApiUrl = "http://paymentgateway.example/api/process";
-    public void ProcessPayment(decimal totalPrice, Payment paymentInfo)
+    private readonly HttpClient _httpClient;
+
+    public PaymentProcessor(HttpClient httpClient)
+    {
+        _httpClient = httpClient;
+    }
+
+    public async Task ProcessPaymentAsync(decimal totalPrice, Payment paymentInfo)
     {
         // Retrieve the API key from the environment variable
         string apiKey = Environment.GetEnvironmentVariable("PAYMENT_API_KEY");
@@ -14,32 +24,24 @@ public class PaymentProcessor : IPaymentProcessor
             throw new Exception("Payment API key not found in environment variables.");
         }
 
-        // Manually build a JSON payload
-        string jsonPayload = "{" +
-            "\"creditCardNumber\":\"" + paymentInfo.CreditCardNumber + "\"," +
-            "\"expiryDate\":\"" + paymentInfo.CreditCardExpiry + "\"," +
-            "\"totalPrice\":" + totalPrice.ToString(System.Globalization.CultureInfo.InvariantCulture) +
-        "}";
-
-        // Use WebClient for a synchronous call
-        using (var client = new WebClient())
+        // Build a JSON payload using JsonSerializer
+        var payload = new
         {
-            client.Headers.Add("API_KEY", apiKey);
-            client.Headers.Add("Content-Type", "application/json");
+            creditCardNumber = paymentInfo.CreditCardNumber,
+            expiryDate = paymentInfo.CreditCardExpiry,
+            totalPrice = totalPrice
+        };
+        string jsonPayload = JsonSerializer.Serialize(payload);
 
-            // Call payment API endpoint
-            // will throw a WebException if the request fails
-            string response = client.UploadString(
-                paymentApiUrl, "POST", jsonPayload);
-            
-            // check for success
-            if (!response.Contains("SUCCESS"))
-            {
-                throw new Exception("Payment processing failed.");
-            }
+        // Create HttpRequestMessage
+        var request = new HttpRequestMessage(HttpMethod.Post, paymentApiUrl)
+        {
+            Content = new StringContent(jsonPayload, Encoding.UTF8, "application/json")
+        };
+        request.Headers.Add("API_KEY", apiKey);
 
-        }
-
+        // Send the request asynchronously
+        HttpResponseMessage response = await _httpClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
     }
-
 }
