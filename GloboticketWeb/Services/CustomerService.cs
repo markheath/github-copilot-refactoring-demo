@@ -13,7 +13,12 @@ public class CustomerService
 
     public async Task<Customer> GetCustomerAsync(string email)
     {
-        return await _context.Customers.Where(c => c.Email == email).FirstOrDefaultAsync();
+        var customer = await _context.Customers.Where(c => c.Email == email).FirstOrDefaultAsync();
+        if (customer == null)
+        {
+            throw new ArgumentException($"Customer with email {email} not found");
+        }
+        return customer;
     }
 
     public async Task<Customer> CreateCustomerAsync(string email, string firstName, string lastName)

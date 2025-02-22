@@ -11,13 +11,13 @@ public class BasketService : IBasketService
         _context = context;
     }
 
-    public async Task<List<Ticket>> GetBasketItems(string sessionId)
+    public Task<List<Ticket>> GetBasketItems(string sessionId)
     {
         if (_sessionBaskets.TryGetValue(sessionId, out var basketItems))
         {
-            return basketItems;
+            return Task.FromResult(basketItems);
         }
-        return new List<Ticket>();
+        return Task.FromResult(new List<Ticket>());
     }
 
     public async Task AddToBasket(string sessionId, int eventId, int numberOfSeats)
@@ -27,6 +27,10 @@ public class BasketService : IBasketService
             _sessionBaskets[sessionId] = new List<Ticket>();
         }
         var @event = await _context.Events.FindAsync(eventId);
+        if (@event == null)
+        {
+            throw new ArgumentException($"Event {eventId} not found");
+        }
 
         var ticket = new Ticket
         {
@@ -38,7 +42,7 @@ public class BasketService : IBasketService
         _sessionBaskets[sessionId].Add(ticket);
     }
 
-    public async Task RemoveFromBasket(string sessionId, int ticketId)
+    public Task RemoveFromBasket(string sessionId, int ticketId)
     {
         if (_sessionBaskets.TryGetValue(sessionId, out var basketItems))
         {
@@ -48,28 +52,31 @@ public class BasketService : IBasketService
                 basketItems.Remove(ticketToRemove);
             }
         }
+
+        return Task.CompletedTask;
     }
 
-    public async Task ClearBasket(string sessionId)
+    public Task ClearBasket(string sessionId)
     {
         _sessionBaskets.Remove(sessionId);
+        return Task.CompletedTask;
     }
 
-    public async Task<decimal> GetBasketTotal(string sessionId)
+    public Task<decimal> GetBasketTotal(string sessionId)
     {
         if (_sessionBaskets.TryGetValue(sessionId, out var basketItems))
         {
-            return basketItems.Sum(item => item.Price * item.NumberOfSeats);
+            return Task.FromResult(basketItems.Sum(item => item.Price * item.NumberOfSeats));
         }
-        return 0;
+        return Task.FromResult<decimal>(0);
     }
 
-    public async Task<int> GetBasketItemCount(string sessionId)
+    public Task<int> GetBasketItemCount(string sessionId)
     {
         if (_sessionBaskets.TryGetValue(sessionId, out var basketItems))
         {
-            return basketItems.Sum(item => item.NumberOfSeats);
+            return Task.FromResult(basketItems.Sum(item => item.NumberOfSeats));
         }
-        return 0;
+        return Task.FromResult(0);
     }
 }
