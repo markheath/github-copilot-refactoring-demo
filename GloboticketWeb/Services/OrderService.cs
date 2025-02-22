@@ -54,7 +54,7 @@ public class OrderService : IOrderService
         order.Status = OrderStatus.Confirmed;
         
         // payment processing
-        await paymentProcessor.ProcessPayment(order.TotalPrice, order.PaymentInfo);
+        paymentProcessor.ProcessPayment(order.TotalPrice, order.PaymentInfo);
 
         order.Status = OrderStatus.Paid;
 

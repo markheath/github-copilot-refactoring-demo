@@ -3,5 +3,5 @@ namespace GloboticketWeb.Services;
 
 public interface IPaymentProcessor
 {
-    Task ProcessPayment(decimal totalPrice, Payment paymentInfo);
+    void ProcessPayment(decimal totalPrice, Payment paymentInfo);
 }
