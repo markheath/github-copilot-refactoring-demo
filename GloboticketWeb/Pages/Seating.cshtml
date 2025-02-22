@@ -109,49 +109,55 @@
 
 @section Scripts {
     <script>
-        $(document).ready(function() {
+        document.addEventListener('DOMContentLoaded', function() {
             const rows = 8;
             const seatsPerRow = 12;
             const maxSelections = 6;
             let selectedSeats = [];
 
             function initializeSeating() {
-                const seatingPlan = $('#seating-plan');
+                const seatingPlan = document.getElementById('seating-plan');
                 
                 for (let row = 0; row < rows; row++) {
-                    const rowContainer = $('<div class="seat-row"></div>');
-                    rowContainer.append(`<span class="row-label">${String.fromCharCode(65 + row)}</span>`);
+                    const rowContainer = document.createElement('div');
+                    rowContainer.className = 'seat-row';
+                    const rowLabel = document.createElement('span');
+                    rowLabel.className = 'row-label';
+                    rowLabel.textContent = String.fromCharCode(65 + row);
+                    rowContainer.appendChild(rowLabel);
                     
                     for (let seat = 0; seat < seatsPerRow; seat++) {
                         const seatNumber = `${String.fromCharCode(65 + row)}${seat + 1}`;
                         const isTaken = Math.random() < 0.3; // 30% chance seat is taken
-                        const seatElement = $(`<div class="seat ${isTaken ? 'taken' : ''}" 
-                            data-seat="${seatNumber}">${seatNumber}</div>`);
+                        const seatElement = document.createElement('div');
+                        seatElement.className = `seat ${isTaken ? 'taken' : ''}`;
+                        seatElement.dataset.seat = seatNumber;
+                        seatElement.textContent = seatNumber;
                         
                         if (!isTaken) {
-                            seatElement.click(function() {
-                                toggleSeat($(this));
+                            seatElement.addEventListener('click', function() {
+                                toggleSeat(seatElement);
                             });
                         }
                         
-                        rowContainer.append(seatElement);
+                        rowContainer.appendChild(seatElement);
                     }
-                    seatingPlan.append(rowContainer);
+                    seatingPlan.appendChild(rowContainer);
                 }
             }
 
             function toggleSeat(seat) {
-                const seatNumber = seat.data('seat');
+                const seatNumber = seat.dataset.seat;
                 
-                if (seat.hasClass('selected')) {
-                    seat.removeClass('selected');
+                if (seat.classList.contains('selected')) {
+                    seat.classList.remove('selected');
                     selectedSeats = selectedSeats.filter(s => s !== seatNumber);
                 } else {
                     if (selectedSeats.length >= maxSelections) {
                         alert(`You can only select up to ${maxSelections} seats.`);
                         return;
                     }
-                    seat.addClass('selected');
+                    seat.classList.add('selected');
                     selectedSeats.push(seatNumber);
                 }
                 
@@ -159,20 +165,22 @@
             }
 
             function updateSelectionSummary() {
-                const selectedList = $('#selected-seats');
-                selectedList.empty();
+                const selectedList = document.getElementById('selected-seats');
+                selectedList.innerHTML = '';
                 
                 selectedSeats.forEach(seat => {
-                    selectedList.append(`<li>Seat ${seat}</li>`);
+                    const listItem = document.createElement('li');
+                    listItem.textContent = `Seat ${seat}`;
+                    selectedList.appendChild(listItem);
                 });
                 
-                $('#seat-count').text(selectedSeats.length);
-                $('#confirm-selection').prop('disabled', selectedSeats.length === 0);
+                document.getElementById('seat-count').textContent = selectedSeats.length;
+                document.getElementById('confirm-selection').disabled = selectedSeats.length === 0;
             }
 
             initializeSeating();
 
-            $('#confirm-selection').click(function() {
+            document.getElementById('confirm-selection').addEventListener('click', function() {
                 if (selectedSeats.length > 0) {
                     alert('Selected seats: ' + selectedSeats.join(', '));
                     // Here you would typically submit the selection to the server
