@@ -47,15 +47,8 @@ public class CustomerService
 
     public static decimal CalculateOrderTotal(List<Order> orders)
     {
-        var total = 0m;
-        foreach (var order in orders)
-        {
-            if (order.Status != OrderStatus.Paid)
-            {
-                continue;
-            }
-            total += order.TotalPrice;
-        }
-        return total;
+        return orders
+            .Where(order => order.Status == OrderStatus.Paid)
+            .Sum(order => order.TotalPrice);
     }
 }
