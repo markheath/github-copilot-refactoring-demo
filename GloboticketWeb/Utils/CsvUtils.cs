@@ -2,20 +2,40 @@ namespace GloboticketWeb.Utils;
 
 public static class CsvUtils
 {
-
     public static string SanitizeCsvValue(string csvValue)
     {
-        // Quick return for empty strings
         if (string.IsNullOrEmpty(csvValue))
+        {
             return string.Empty;
-
-        // Check if sanitization is needed at all
-        if (!csvValue.Contains(',') && !char.IsWhiteSpace(csvValue[0]) && !char.IsWhiteSpace(csvValue[csvValue.Length - 1]))
+        }
+    
+        // Quick check if sanitization is likely needed
+        if (!csvValue.Contains(',') && !char.IsWhiteSpace(csvValue[0]) && !char.IsWhiteSpace(csvValue[^1]))
+        {
             return csvValue;
-
+        }
+    
         var parts = csvValue.Split(',');
-        List<string> values = new List<string>(parts.Length); // Pre-allocate capacity
-        foreach(var part in parts)
+        bool needsSanitization = false;
+        
+        // Check if any part needs trimming or removal
+        for (int i = 0; i < parts.Length; i++)
+        {
+            if (string.IsNullOrWhiteSpace(parts[i]) || parts[i] != parts[i].Trim())
+            {
+                needsSanitization = true;
+                break;
+            }
+        }
+        
+        if (!needsSanitization)
+        {
+            return csvValue;
+        }
+        
+        // Only allocate the list and perform operations if needed
+        List<string> values = new List<string>();
+        foreach (var part in parts)
         {
             if (!string.IsNullOrWhiteSpace(part))
             {
