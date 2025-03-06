@@ -25,15 +25,21 @@ public class QrCodeBuilder
         // Create or get container reference
         var containerClient = blobServiceClient.GetBlobContainerClient(ContainerName);
 
-        // Check if container exists, if not create it
-        await containerClient.CreateIfNotExistsAsync();
-
         // Create unique blob name
         string blobName = $"ticket_{ticket.Id}_{Guid.NewGuid()}.png";
         var blobClient = containerClient.GetBlobClient(blobName);
 
-        // Upload QR code to blob storage
-        await blobClient.UploadAsync(new BinaryData(qrCodeBytes), overwrite: true);
+        try
+        {
+            // Upload QR code to blob storage directly without checking if container exists
+            await blobClient.UploadAsync(new BinaryData(qrCodeBytes), overwrite: true);
+        }
+        catch (Azure.RequestFailedException ex) when (ex.ErrorCode == "ContainerNotFound")
+        {
+            // Create container only if it doesn't exist and then retry upload
+            await containerClient.CreateAsync();
+            await blobClient.UploadAsync(new BinaryData(qrCodeBytes), overwrite: true);
+        }
 
         await SetBlobMetadata(ticket, blobClient);
 
