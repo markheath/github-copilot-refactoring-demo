@@ -1,7 +1,9 @@
+using Azure.Storage.Blobs;
 using GloboticketWeb.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+var connectionString = builder.Configuration.GetConnectionString("AzureStorage");
 
 // Add services to the container
 builder.Services.AddRazorPages();
@@ -14,6 +16,7 @@ builder.Services.AddScoped<IBasketService, BasketService>();
 // Add this line to your service registration
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddHttpClient<IPaymentProcessor, PaymentProcessor>();
+builder.Services.AddSingleton(x => new BlobServiceClient(connectionString));
 
 var app = builder.Build();
 
