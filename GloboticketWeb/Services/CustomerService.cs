@@ -39,6 +39,19 @@ public class CustomerService : ICustomerService
 
     public async Task<List<string>> GetCustomerFavoriteArtists(string email)
     {
+        // This query will be translated to a single SQL statement that only selects
+        // the Artist column directly with the proper joins
+        return await _context.Orders
+            .Where(o => o.CustomerDetails.Email == email)
+            .SelectMany(o => o.Tickets)
+            .Select(t => t.Event.Artist)
+            .Distinct()
+            .ToListAsync();
+    }
+
+    // the original unoptimized version of GetCustomerFavoriteArtists
+    public async Task<List<string>> OriginalGetCustomerFavoriteArtists(string email)
+    {
         var artists = new HashSet<string>();
         var orders =  await _context.Orders
             .Where(o => o.CustomerDetails.Email == email)
