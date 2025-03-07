@@ -110,4 +110,185 @@ public static class EventDataSeeder
             await context.SaveChangesAsync();
         }
     }
+    
+    public static async Task SeedCustomersAndOrders(IServiceProvider serviceProvider)
+    {
+        using var scope = serviceProvider.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<GloboticketDbContext>();
+
+        // Seed customers if none exist
+        if (!await context.Customers.AnyAsync())
+        {
+            var customers = new List<Customer>
+            {
+                new() 
+                {
+                    FirstName = "Michael",
+                    LastName = "Williams",
+                    Email = "michael.williams@example.com"
+                },
+                new() 
+                {
+                    FirstName = "Sophia",
+                    LastName = "Brown",
+                    Email = "sophia.brown@example.com"
+                },
+                new()
+                {
+                    FirstName = "Priya",
+                    LastName = "Patel",
+                    Email = "priya.patel@example.com"
+                },
+                new() 
+                {
+                    FirstName = "Wei",
+                    LastName = "Zhang",
+                    Email = "wei.zhang@example.com"
+                },
+            };
+
+            await context.Customers.AddRangeAsync(customers);
+            await context.SaveChangesAsync();
+        }
+
+        // Seed orders for Priya Patel if none exist
+        if (!await context.Orders.AnyAsync())
+        {
+            // Get Priya Patel
+            var customer = await context.Customers
+                .FirstOrDefaultAsync(c => c.FirstName == "Priya" && c.LastName == "Patel");
+                
+            if (customer != null)
+            {
+                // Get some events
+                var events = await context.Events.Take(5).ToListAsync();
+                
+                if (events.Any())
+                {
+                    var orders = new List<Order>();
+                    
+                    // Create payment info
+                    var payment1 = new Payment 
+                    {
+                        PaymentMethod = "Credit Card",
+                        CreditCardNumber = "************4567",
+                        CreditCardType = "Visa",
+                        CreditCardExpiry = new DateOnly(2026, 5, 1),
+                        CreditCardName = "Priya Patel"
+                    };
+                    
+                    var payment2 = new Payment 
+                    {
+                        PaymentMethod = "PayPal",
+                        PaypalAddress = "priya.patel@example.com"
+                    };
+                    
+                    // Order 1: Two tickets for first event
+                    var order1 = new Order
+                    {
+                        CustomerDetails = customer,
+                        PaymentInfo = payment1,
+                        Status = OrderStatus.Paid,
+                        DiscountCode = "SUMMER2025",
+                        Tickets = new List<Ticket> 
+                        {
+                            new Ticket 
+                            {
+                                Event = events[0],
+                                NumberOfSeats = 2,
+                                Price = events[0].TicketPrice * 2
+                            }
+                        }
+                    };
+                    order1.TotalPrice = order1.Tickets.Sum(t => t.Price);
+                    orders.Add(order1);
+                    
+                    // Order 2: One ticket for second event
+                    var order2 = new Order
+                    {
+                        CustomerDetails = customer,
+                        PaymentInfo = payment2,
+                        Status = OrderStatus.Confirmed,
+                        Tickets = new List<Ticket> 
+                        {
+                            new Ticket 
+                            {
+                                Event = events[1],
+                                NumberOfSeats = 1,
+                                Price = events[1].TicketPrice
+                            }
+                        }
+                    };
+                    order2.TotalPrice = order2.Tickets.Sum(t => t.Price);
+                    orders.Add(order2);
+                    
+                    // Order 3: Multiple tickets for multiple events
+                    var order3 = new Order
+                    {
+                        CustomerDetails = customer,
+                        PaymentInfo = payment1,
+                        Status = OrderStatus.Paid,
+                        Tickets = new List<Ticket> 
+                        {
+                            new Ticket 
+                            {
+                                Event = events[2],
+                                NumberOfSeats = 2,
+                                Price = events[2].TicketPrice * 2
+                            },
+                            new Ticket 
+                            {
+                                Event = events[3],
+                                NumberOfSeats = 1,
+                                Price = events[3].TicketPrice
+                            }
+                        }
+                    };
+                    order3.TotalPrice = order3.Tickets.Sum(t => t.Price);
+                    orders.Add(order3);
+                    
+                    // Order 4: Pending order
+                    var order4 = new Order
+                    {
+                        CustomerDetails = customer,
+                        PaymentInfo = payment2,
+                        Status = OrderStatus.Pending,
+                        Tickets = new List<Ticket> 
+                        {
+                            new Ticket 
+                            {
+                                Event = events[4],
+                                NumberOfSeats = 4,
+                                Price = events[4].TicketPrice * 4
+                            }
+                        }
+                    };
+                    order4.TotalPrice = order4.Tickets.Sum(t => t.Price);
+                    orders.Add(order4);
+                    
+                    // Order 5: Cancelled order
+                    var order5 = new Order
+                    {
+                        CustomerDetails = customer,
+                        PaymentInfo = payment1,
+                        Status = OrderStatus.Cancelled,
+                        Tickets = new List<Ticket> 
+                        {
+                            new Ticket 
+                            {
+                                Event = events[0],
+                                NumberOfSeats = 1,
+                                Price = events[0].TicketPrice
+                            }
+                        }
+                    };
+                    order5.TotalPrice = order5.Tickets.Sum(t => t.Price);
+                    orders.Add(order5);
+
+                    await context.Orders.AddRangeAsync(orders);
+                    await context.SaveChangesAsync();
+                }
+            }
+        }
+    }
 }

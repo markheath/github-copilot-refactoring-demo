@@ -16,8 +16,17 @@ public class GloboticketDbContext : DbContext
         DbPath = System.IO.Path.Join(path, "globoticket.db");
     }
 
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Customer>().ToTable("Customer");
+        
+        // Other configurations...
+        base.OnModelCreating(modelBuilder);
+    }
+
     // The following configures EF to create a Sqlite database file in the
     // special "local" folder for your platform.
     protected override void OnConfiguring(DbContextOptionsBuilder options)
-        => options.UseSqlite($"Data Source={DbPath}");
+        => options
+            .UseSqlite($"Data Source={DbPath}");
 }

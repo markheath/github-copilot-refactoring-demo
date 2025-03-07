@@ -1,8 +1,9 @@
+using System.ComponentModel;
 using GloboticketWeb.Models;
 using Microsoft.EntityFrameworkCore;
 namespace GloboticketWeb.Services;
 
-public class CustomerService
+public class CustomerService : ICustomerService
 {
     private readonly GloboticketDbContext _context;
 
@@ -34,6 +35,25 @@ public class CustomerService
         await _context.SaveChangesAsync();
 
         return customer;
+    }
+
+    public async Task<List<string>> GetCustomerFavoriteArtists(string email)
+    {
+        var artists = new HashSet<string>();
+        var orders =  await _context.Orders
+            .Where(o => o.CustomerDetails.Email == email)
+            .Include(o => o.Tickets)
+            .ThenInclude(t => t.Event)
+            .ToListAsync();
+
+        foreach(var order in orders)
+        {
+            foreach(var ticket in order.Tickets)
+            {
+                artists.Add(ticket.Event.Artist);
+            }
+        }
+        return artists.ToList();
     }
 
     // get customer orders

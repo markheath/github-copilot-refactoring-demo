@@ -15,6 +15,7 @@ builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddScoped<IBasketService, BasketService>();
 // Add this line to your service registration
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddHttpClient<IPaymentProcessor, PaymentProcessor>();
 builder.Services.AddSingleton(x => new BlobServiceClient(connectionString));
 
@@ -37,5 +38,14 @@ app.UseAuthorization();
 app.MapRazorPages();
 
 await EventDataSeeder.SeedEvents(app.Services);
+await EventDataSeeder.SeedCustomersAndOrders(app.Services);
+
+// test GetCustomerFavoriteArtists
+using (var scope = app.Services.CreateScope())
+{
+    var customerService = scope.ServiceProvider.GetRequiredService<ICustomerService>();
+    var favoriteArtists = await customerService.GetCustomerFavoriteArtists("priya.patel@example.com");
+    Console.WriteLine($"Favorite artists for customer: {string.Join(", ", favoriteArtists)}");
+}
 
 app.Run();
